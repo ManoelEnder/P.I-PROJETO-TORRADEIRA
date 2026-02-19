@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
+using TMPro;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -10,11 +11,11 @@ public class PlayerMovement : MonoBehaviour
     public Transform cameraTransform;
     public Rigidbody rb;
 
+    public TextMeshProUGUI textoInteracao;
+
     float xRotation = 0f;
     bool isGrounded;
 
-
-    private Inventario inventario;
     private ItemColetavel itemPerto;
 
     void Start()
@@ -22,7 +23,7 @@ public class PlayerMovement : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        inventario = GetComponent<Inventario>();
+        textoInteracao.gameObject.SetActive(false); 
     }
 
     void Update()
@@ -49,12 +50,12 @@ public class PlayerMovement : MonoBehaviour
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
         }
 
-
+        // 🔹 Coletar item
         if (itemPerto != null && Keyboard.current.eKey.wasPressedThisFrame)
         {
-            inventario.AdicionarItem(itemPerto.itemNome);
             Destroy(itemPerto.gameObject);
             itemPerto = null;
+            textoInteracao.gameObject.SetActive(false);
         }
     }
 
@@ -68,7 +69,6 @@ public class PlayerMovement : MonoBehaviour
         isGrounded = false;
     }
 
-
     private void OnTriggerEnter(Collider other)
     {
         ItemColetavel item = other.GetComponentInParent<ItemColetavel>();
@@ -76,7 +76,9 @@ public class PlayerMovement : MonoBehaviour
         if (item != null)
         {
             itemPerto = item;
-            Debug.Log("Aperte E para coletar " + item.itemNome);
+
+            textoInteracao.text = "Aperte [E] para coletar " + item.itemNome;
+            textoInteracao.gameObject.SetActive(true);
         }
     }
 
@@ -87,6 +89,7 @@ public class PlayerMovement : MonoBehaviour
         if (item != null && item == itemPerto)
         {
             itemPerto = null;
+            textoInteracao.gameObject.SetActive(false);
         }
     }
 }

@@ -32,12 +32,12 @@ public class NPCDialogue : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.E))
         {
-            // Começa o diálogo
+            
             if (!dialoguePanel.activeInHierarchy)
             {
                 StartDialogue();
             }
-            // Avança apenas se não estiver digitando
+          
             else if (!isTyping)
             {
                 NextLine();
@@ -47,7 +47,7 @@ public class NPCDialogue : MonoBehaviour
 
     void StartDialogue()
     {
-        // 🔒 PROTEÇÃO: se não tiver texto
+     
         if (lines == null || lines.Length == 0)
         {
             Debug.LogError("NPCDialogue: array 'lines' está vazio!");
@@ -79,7 +79,7 @@ public class NPCDialogue : MonoBehaviour
         isTyping = true;
         dialogueText.text = "";
 
-        // 🔒 PROTEÇÃO EXTRA
+     
         if (index < 0 || index >= lines.Length)
         {
             Debug.LogError("NPCDialogue: índice inválido → " + index);
