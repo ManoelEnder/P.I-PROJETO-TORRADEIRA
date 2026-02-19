@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using TMPro;
 using System.Collections;
 
 public class PhotoCamera : MonoBehaviour
@@ -11,12 +12,19 @@ public class PhotoCamera : MonoBehaviour
     public GameObject[] temporalObjects;
     public Image flashImage;
 
+    public Image cooldownBar;
+    public TextMeshProUGUI photoCounter;
+    public GameObject crosshair;
+
+
     public float cooldown = 2f;
     public float flashDuration = 0.2f;
 
     RenderTexture rt;
     Texture2D photo;
+
     bool canShoot = true;
+    int photoCount = 0;
 
     void Start()
     {
@@ -31,6 +39,12 @@ public class PhotoCamera : MonoBehaviour
             c.a = 0f;
             flashImage.color = c;
         }
+
+        if (cooldownBar != null)
+            cooldownBar.fillAmount = 0f;
+
+        if (photoCounter != null)
+            photoCounter.text = "Fotos: 0";
     }
 
     void Update()
@@ -44,6 +58,13 @@ public class PhotoCamera : MonoBehaviour
     IEnumerator TakePhoto()
     {
         canShoot = false;
+
+        if (crosshair != null)
+            crosshair.SetActive(false);
+
+        photoCount++;
+        if (photoCounter != null)
+            photoCounter.text = "Fotos: " + photoCount;
 
         transform.SetPositionAndRotation(
             playerCam.transform.position,
@@ -60,8 +81,6 @@ public class PhotoCamera : MonoBehaviour
 
         StartCoroutine(FlashEffect());
 
-
-
         RenderTexture.active = rt;
         photo = new Texture2D(rt.width, rt.height, TextureFormat.RGB24, false);
         photo.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
@@ -77,9 +96,26 @@ public class PhotoCamera : MonoBehaviour
         yield return new WaitForSeconds(2f);
         photoPreview.gameObject.SetActive(false);
 
-        yield return new WaitForSeconds(cooldown);
+        float t = 0f;
+        while (t < cooldown)
+        {
+            t += Time.deltaTime;
+
+            if (cooldownBar != null)
+                cooldownBar.fillAmount = t / cooldown;
+
+            yield return null;
+        }
+
+        if (cooldownBar != null)
+            cooldownBar.fillAmount = 0f;
+
         canShoot = true;
+
+        if (crosshair != null)
+            crosshair.SetActive(true);
     }
+
 
     IEnumerator FlashEffect()
     {
