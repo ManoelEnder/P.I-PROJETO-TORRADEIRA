@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
@@ -13,10 +13,16 @@ public class PlayerMovement : MonoBehaviour
     float xRotation = 0f;
     bool isGrounded;
 
+   
+    private Inventario inventario;
+    private ItemColetavel itemPerto;
+
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        inventario = GetComponent<Inventario>();
     }
 
     void Update()
@@ -42,6 +48,14 @@ public class PlayerMovement : MonoBehaviour
         {
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
         }
+
+        
+        if (itemPerto != null && Keyboard.current.eKey.wasPressedThisFrame)
+        {
+            inventario.AdicionarItem(itemPerto.itemNome);
+            Destroy(itemPerto.gameObject);
+            itemPerto = null;
+        }
     }
 
     void OnCollisionStay()
@@ -52,5 +66,27 @@ public class PlayerMovement : MonoBehaviour
     void OnCollisionExit()
     {
         isGrounded = false;
+    }
+
+   
+    private void OnTriggerEnter(Collider other)
+    {
+        ItemColetavel item = other.GetComponentInParent<ItemColetavel>();
+
+        if (item != null)
+        {
+            itemPerto = item;
+            Debug.Log("Aperte E para coletar " + item.itemNome);
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        ItemColetavel item = other.GetComponentInParent<ItemColetavel>();
+
+        if (item != null && item == itemPerto)
+        {
+            itemPerto = null;
+        }
     }
 }
