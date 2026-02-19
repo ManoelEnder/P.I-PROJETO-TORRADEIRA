@@ -12,13 +12,18 @@ public class PhotoCamera : MonoBehaviour
     public GameObject[] temporalObjects;
     public Image flashImage;
 
+    public AudioSource audioSource;
+    public AudioClip shutterSound;
+
     public Image cooldownBar;
     public TextMeshProUGUI photoCounter;
     public GameObject crosshair;
 
+    public Light flashLight;
 
     public float cooldown = 2f;
-    public float flashDuration = 0.2f;
+    public float flashDuration = 0.12f;
+    public float flashLightIntensity = 30f;
 
     RenderTexture rt;
     Texture2D photo;
@@ -31,13 +36,17 @@ public class PhotoCamera : MonoBehaviour
         rt = new RenderTexture(512, 512, 24);
         photoCam.targetTexture = rt;
         photoCam.enabled = false;
+
         photoPreview.gameObject.SetActive(false);
+        Color p = photoPreview.color;
+        p.a = 0f;
+        photoPreview.color = p;
 
         if (flashImage != null)
         {
-            Color c = flashImage.color;
-            c.a = 0f;
-            flashImage.color = c;
+            Color f = flashImage.color;
+            f.a = 0f;
+            flashImage.color = f;
         }
 
         if (cooldownBar != null)
@@ -50,9 +59,7 @@ public class PhotoCamera : MonoBehaviour
     void Update()
     {
         if (Mouse.current.leftButton.wasPressedThisFrame && canShoot)
-        {
             StartCoroutine(TakePhoto());
-        }
     }
 
     IEnumerator TakePhoto()
@@ -75,11 +82,26 @@ public class PhotoCamera : MonoBehaviour
 
         photoCam.enabled = true;
         photoCam.Render();
+
+        Ray ray = new Ray(photoCam.transform.position, photoCam.transform.forward);
+        RaycastHit[] hits = Physics.SphereCastAll(ray, 2f, 100f);
+
+        foreach (RaycastHit hit in hits)
+        {
+            if (hit.collider.CompareTag("Revelable"))
+            {
+                Renderer[] renderers = hit.collider.GetComponentsInChildren<Renderer>(true);
+                foreach (Renderer r in renderers)
+                    r.enabled = true;
+            }
+        }
+
         photoCam.enabled = false;
 
-        yield return null;
+        if (audioSource != null && shutterSound != null)
+            audioSource.PlayOneShot(shutterSound);
 
-        StartCoroutine(FlashEffect());
+        yield return StartCoroutine(FlashEffect());
 
         RenderTexture.active = rt;
         photo = new Texture2D(rt.width, rt.height, TextureFormat.RGB24, false);
@@ -90,11 +112,14 @@ public class PhotoCamera : MonoBehaviour
         photoPreview.texture = photo;
         photoPreview.gameObject.SetActive(true);
 
+        yield return StartCoroutine(FadePhoto(0f, 1f, 0.25f));
+        yield return new WaitForSeconds(1.3f);
+        yield return StartCoroutine(FadePhoto(1f, 0f, 0.25f));
+
+        photoPreview.gameObject.SetActive(false);
+
         foreach (GameObject obj in temporalObjects)
             obj.SetActive(true);
-
-        yield return new WaitForSeconds(2f);
-        photoPreview.gameObject.SetActive(false);
 
         float t = 0f;
         while (t < cooldown)
@@ -116,17 +141,18 @@ public class PhotoCamera : MonoBehaviour
             crosshair.SetActive(true);
     }
 
-
     IEnumerator FlashEffect()
     {
-        float t = 0f;
-
         if (flashImage == null)
             yield break;
 
+        float t = 0f;
         Color c = flashImage.color;
-        c.a = 1f;
+        c.a = 2.5f;
         flashImage.color = c;
+
+        if (flashLight != null)
+            flashLight.intensity = flashLightIntensity;
 
         while (t < flashDuration)
         {
@@ -136,10 +162,35 @@ public class PhotoCamera : MonoBehaviour
             c.a = Mathf.Lerp(1f, 0f, lerp);
             flashImage.color = c;
 
+            if (flashLight != null)
+                flashLight.intensity = Mathf.Lerp(flashLightIntensity, 0f, lerp);
+
             yield return null;
         }
 
         c.a = 0f;
         flashImage.color = c;
+
+        if (flashLight != null)
+            flashLight.intensity = 0f;
+        Debug.Log("Flash ativado");
+
+    }
+
+    IEnumerator FadePhoto(float startAlpha, float endAlpha, float duration)
+    {
+        float t = 0f;
+        Color c = photoPreview.color;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            c.a = Mathf.Lerp(startAlpha, endAlpha, t / duration);
+            photoPreview.color = c;
+            yield return null;
+        }
+
+        c.a = endAlpha;
+        photoPreview.color = c;
     }
 }

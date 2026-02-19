@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - Temporal
+  - Revelable
   layers:
   - Default
   - TransparentFX
