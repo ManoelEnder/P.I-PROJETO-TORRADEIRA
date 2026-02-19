@@ -13,7 +13,7 @@ public class PlayerMovement : MonoBehaviour
     float xRotation = 0f;
     bool isGrounded;
 
-   
+
     private Inventario inventario;
     private ItemColetavel itemPerto;
 
@@ -49,7 +49,7 @@ public class PlayerMovement : MonoBehaviour
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
         }
 
-        
+
         if (itemPerto != null && Keyboard.current.eKey.wasPressedThisFrame)
         {
             inventario.AdicionarItem(itemPerto.itemNome);
@@ -68,7 +68,7 @@ public class PlayerMovement : MonoBehaviour
         isGrounded = false;
     }
 
-   
+
     private void OnTriggerEnter(Collider other)
     {
         ItemColetavel item = other.GetComponentInParent<ItemColetavel>();
