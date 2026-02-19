@@ -19,11 +19,8 @@ public class PhotoCamera : MonoBehaviour
     public TextMeshProUGUI photoCounter;
     public GameObject crosshair;
 
-    public Light flashLight;
-
     public float cooldown = 2f;
-    public float flashDuration = 0.12f;
-    public float flashLightIntensity = 30f;
+    public float flashDuration = 0.07f;
 
     RenderTexture rt;
     Texture2D photo;
@@ -79,29 +76,14 @@ public class PhotoCamera : MonoBehaviour
         );
 
         photoCam.fieldOfView = playerCam.fieldOfView;
-
         photoCam.enabled = true;
         photoCam.Render();
-
-        Ray ray = new Ray(photoCam.transform.position, photoCam.transform.forward);
-        RaycastHit[] hits = Physics.SphereCastAll(ray, 2f, 100f);
-
-        foreach (RaycastHit hit in hits)
-        {
-            if (hit.collider.CompareTag("Revelable"))
-            {
-                Renderer[] renderers = hit.collider.GetComponentsInChildren<Renderer>(true);
-                foreach (Renderer r in renderers)
-                    r.enabled = true;
-            }
-        }
-
         photoCam.enabled = false;
 
         if (audioSource != null && shutterSound != null)
             audioSource.PlayOneShot(shutterSound);
 
-        yield return StartCoroutine(FlashEffect());
+        yield return StartCoroutine(FlashCoroutine());
 
         RenderTexture.active = rt;
         photo = new Texture2D(rt.width, rt.height, TextureFormat.RGB24, false);
@@ -125,10 +107,8 @@ public class PhotoCamera : MonoBehaviour
         while (t < cooldown)
         {
             t += Time.deltaTime;
-
             if (cooldownBar != null)
                 cooldownBar.fillAmount = t / cooldown;
-
             yield return null;
         }
 
@@ -141,40 +121,22 @@ public class PhotoCamera : MonoBehaviour
             crosshair.SetActive(true);
     }
 
-    IEnumerator FlashEffect()
+    IEnumerator FlashCoroutine()
     {
-        if (flashImage == null)
-            yield break;
-
-        float t = 0f;
-        Color c = flashImage.color;
-        c.a = 2.5f;
-        flashImage.color = c;
-
-        if (flashLight != null)
-            flashLight.intensity = flashLightIntensity;
-
-        while (t < flashDuration)
+        if (flashImage != null)
         {
-            t += Time.deltaTime;
-            float lerp = t / flashDuration;
+            flashImage.gameObject.SetActive(true);
 
-            c.a = Mathf.Lerp(1f, 0f, lerp);
+            Color c = flashImage.color;
+            c.a = 1f;
             flashImage.color = c;
 
-            if (flashLight != null)
-                flashLight.intensity = Mathf.Lerp(flashLightIntensity, 0f, lerp);
+            yield return new WaitForSeconds(flashDuration);
 
-            yield return null;
+            c.a = 0f;
+            flashImage.color = c;
+            flashImage.gameObject.SetActive(false);
         }
-
-        c.a = 0f;
-        flashImage.color = c;
-
-        if (flashLight != null)
-            flashLight.intensity = 0f;
-        Debug.Log("Flash ativado");
-
     }
 
     IEnumerator FadePhoto(float startAlpha, float endAlpha, float duration)
