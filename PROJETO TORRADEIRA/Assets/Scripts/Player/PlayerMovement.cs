@@ -50,7 +50,6 @@ public class PlayerMovement : MonoBehaviour
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
         }
 
-        // 🔹 Coletar item
         if (itemPerto != null && Keyboard.current.eKey.wasPressedThisFrame)
         {
             Destroy(itemPerto.gameObject);

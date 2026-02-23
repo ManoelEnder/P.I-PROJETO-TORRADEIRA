@@ -9,7 +9,7 @@ public class PhotoCamera : MonoBehaviour
     public Camera photoCam;
     public Camera playerCam;
     public RawImage photoPreview;
-    public GameObject[] temporalObjects;
+    public Renderer[] temporalRenderers;
     public Image flashImage;
 
     public AudioSource audioSource;
@@ -51,6 +51,9 @@ public class PhotoCamera : MonoBehaviour
 
         if (photoCounter != null)
             photoCounter.text = "Fotos: 0";
+
+        foreach (Renderer r in temporalRenderers)
+            r.enabled = false;
     }
 
     void Update()
@@ -76,9 +79,18 @@ public class PhotoCamera : MonoBehaviour
         );
 
         photoCam.fieldOfView = playerCam.fieldOfView;
+
+        foreach (Renderer r in temporalRenderers)
+            r.enabled = true;
+
+        yield return new WaitForEndOfFrame();
+
         photoCam.enabled = true;
         photoCam.Render();
         photoCam.enabled = false;
+
+        foreach (Renderer r in temporalRenderers)
+            r.enabled = false;
 
         if (audioSource != null && shutterSound != null)
             audioSource.PlayOneShot(shutterSound);
@@ -99,9 +111,6 @@ public class PhotoCamera : MonoBehaviour
         yield return StartCoroutine(FadePhoto(1f, 0f, 0.25f));
 
         photoPreview.gameObject.SetActive(false);
-
-        foreach (GameObject obj in temporalObjects)
-            obj.SetActive(true);
 
         float t = 0f;
         while (t < cooldown)
