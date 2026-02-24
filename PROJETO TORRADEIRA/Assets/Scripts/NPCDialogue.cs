@@ -7,6 +7,7 @@ public class NPCDialogue : MonoBehaviour
     [Header("UI")]
     public GameObject dialoguePanel;
     public Text dialogueText;
+    public GameObject interactionPrompt; 
 
     [Header("Texto do diálogo")]
     [TextArea(2, 6)]
@@ -24,6 +25,7 @@ public class NPCDialogue : MonoBehaviour
     void Start()
     {
         dialoguePanel.SetActive(false);
+        if (interactionPrompt != null) interactionPrompt.SetActive(false);
     }
 
     void Update()
@@ -32,12 +34,12 @@ public class NPCDialogue : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.E))
         {
-            
             if (!dialoguePanel.activeInHierarchy)
             {
+              
+                if (interactionPrompt != null) interactionPrompt.SetActive(false);
                 StartDialogue();
             }
-          
             else if (!isTyping)
             {
                 NextLine();
@@ -47,12 +49,7 @@ public class NPCDialogue : MonoBehaviour
 
     void StartDialogue()
     {
-     
-        if (lines == null || lines.Length == 0)
-        {
-            Debug.LogError("NPCDialogue: array 'lines' está vazio!");
-            return;
-        }
+        if (lines == null || lines.Length == 0) return;
 
         index = 0;
         dialoguePanel.SetActive(true);
@@ -63,7 +60,6 @@ public class NPCDialogue : MonoBehaviour
     void NextLine()
     {
         index++;
-
         if (index < lines.Length)
         {
             StartCoroutine(TypeLine());
@@ -79,14 +75,6 @@ public class NPCDialogue : MonoBehaviour
         isTyping = true;
         dialogueText.text = "";
 
-     
-        if (index < 0 || index >= lines.Length)
-        {
-            Debug.LogError("NPCDialogue: índice inválido → " + index);
-            isTyping = false;
-            yield break;
-        }
-
         foreach (char c in lines[index])
         {
             dialogueText.text += c;
@@ -100,6 +88,10 @@ public class NPCDialogue : MonoBehaviour
     {
         dialoguePanel.SetActive(false);
         UnfreezePlayer();
+
+     
+        if (playerInside && interactionPrompt != null)
+            interactionPrompt.SetActive(true);
     }
 
     void FreezePlayer()
@@ -108,21 +100,24 @@ public class NPCDialogue : MonoBehaviour
         if (player != null)
         {
             playerController = player.GetComponent<CharacterController>();
-            if (playerController != null)
-                playerController.enabled = false;
+            if (playerController != null) playerController.enabled = false;
         }
     }
 
     void UnfreezePlayer()
     {
-        if (playerController != null)
-            playerController.enabled = true;
+        if (playerController != null) playerController.enabled = true;
     }
 
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))
+        {
             playerInside = true;
+            
+            if (interactionPrompt != null && !dialoguePanel.activeInHierarchy)
+                interactionPrompt.SetActive(true);
+        }
     }
 
     private void OnTriggerExit(Collider other)
@@ -130,6 +125,10 @@ public class NPCDialogue : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             playerInside = false;
+           
+            if (interactionPrompt != null)
+                interactionPrompt.SetActive(false);
+
             EndDialogue();
         }
     }
