@@ -128,6 +128,18 @@ public class PhotoCamera : MonoBehaviour
 
         if (crosshair != null)
             crosshair.SetActive(true);
+
+        Ray ray = new Ray(playerCam.transform.position, playerCam.transform.forward);
+        RaycastHit hit;
+
+        if (Physics.Raycast(ray, out hit, 100f))
+        {
+            EvidenceObject evidence = hit.collider.GetComponent<EvidenceObject>();
+            if (evidence != null)
+            {
+                evidence.Collect();
+            }
+        }
     }
 
     IEnumerator FlashCoroutine()
